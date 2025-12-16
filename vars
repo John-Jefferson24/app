@@ -1,6 +1,0 @@
-{
-  "target_env": "dev",
-  "apps_select": "openshift_proxy",
-  "wheel_url": "https://artifacts.horizon.bankofamerica.com/artifactory/libs-snapshots-local-pypi/com/baml/gmgenai/openshift_proxy/openshift_proxy/0.0.3.3/openshift_proxy-3.0.0-any-py3.whl",
-  "image_tag": "12345"
-}
