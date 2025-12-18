@@ -1,0 +1,53 @@
+- name: Build app.configmaps data from local files
+  when: app.configmaps is defined
+  block:
+
+    - name: Init rebuilt configmaps list
+      set_fact:
+        _rebuilt_configmaps: []
+
+    - name: Rebuild each configmap
+      set_fact:
+        _rebuilt_configmaps: "{{ _rebuilt_configmaps + [ _cm_rebuilt ] }}"
+      loop: "{{ app.configmaps }}"
+      loop_control:
+        loop_var: cm
+      vars:
+        _cm_files_dir: >-
+          {{
+            (cm.files_dir | default(''))
+            | replace('{{ target_env }}', target_env)
+          }}
+
+        _cm_paths: >-
+          {{
+            (cm.files_dir is defined)
+            | ternary(
+                lookup('fileglob', app_dir ~ '/' ~ _cm_files_dir ~ '/*', wantlist=True),
+                []
+              )
+          }}
+
+        # dict: filename -> file contents
+        _cm_data_from_files: >-
+          {{
+            dict(
+              (_cm_paths | map('basename'))
+              | zip(_cm_paths | map('lookup', 'file'))
+            )
+          }}
+
+        _cm_final_data: >-
+          {{
+            (cm.files_dir is defined)
+            | ternary(_cm_data_from_files, (cm.data | default({})))
+          }}
+
+        _cm_rebuilt: >-
+          {{
+            cm | combine({ 'data': _cm_final_data })
+          }}
+
+    - name: Write rebuilt configmaps back into app
+      set_fact:
+        app: "{{ app | combine({ 'configmaps': _rebuilt_configmaps }, recursive=True) }}"
