@@ -7,6 +7,13 @@
 
     - set_fact:
         configmap_data: "{{ configmap_data | combine({ (p | basename): lookup('file', p) }) }}"
-      loop: "{{ lookup('fileglob', app_dir ~ '/proxy/configmap/' ~ target_env ~ '/*', wantlist=True) }}"
+      loop: >-
+        {{
+          lookup(
+            'fileglob',
+            app_dir ~ '/' ~ app.name ~ '/configmap/' ~ target_env ~ '/*',
+            wantlist=True
+          )
+        }}
       loop_control:
         loop_var: p
